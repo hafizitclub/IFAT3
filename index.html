@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tRAT Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #quiz-container {
+            width: 300px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        #options-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .option-button {
+            width: 60px;
+            padding: 10px;
+            font-size: 16px;
+            position: relative;
+        }
+
+        .option-button.correct::after {
+            content: '★';
+            color: blue;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            animation: flash 0.5s infinite;
+        }
+
+        .points {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            left: 0;
+            color: red;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .option-button.correct-stationary::after {
+            animation: none;
+        }
+
+        @keyframes flash {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        #navigation {
+            margin: 20px 0;
+        }
+
+        #navigation button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 16px;
+        }
+
+        #score-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="quiz-container">
+        <div id="question-container">
+            <h2 id="question-number">Question 1</h2>
+            <div id="options-container">
+                <button class="option-button" onclick="checkAnswer('A')">A</button>
+                <button class="option-button" onclick="checkAnswer('B')">B</button>
+                <button class="option-button" onclick="checkAnswer('C')">C</button>
+                <button class="option-button" onclick="checkAnswer('D')">D</button>
+            </div>
+        </div>
+        <div id="navigation">
+            <button onclick="prevQuestion()">Previous</button>
+            <button onclick="nextQuestion()">Next</button>
+        </div>
+        <div id="score-container">
+            <p>Score: <span id="score">0</span></p>
+        </div>
+    </div>
+    <script>
+        const questions = [
+            { number: 1, answer: 'A' },
+            { number: 2, answer: 'B' },
+            { number: 3, answer: 'C' },
+            { number: 4, answer: 'D' },
+            { number: 5, answer: 'A' },
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let attempts = 0;
+
+        function loadQuestion(index) {
+            const questionNumber = document.getElementById('question-number');
+            questionNumber.textContent = `Question ${questions[index].number}`;
+            const buttons = document.querySelectorAll('.option-button');
+            buttons.forEach(button => {
+                button.classList.remove('correct');
+                button.classList.remove('correct-stationary');
+                button.style.backgroundColor = '';
+                button.disabled = false;
+                const pointsDisplay = button.querySelector('.points');
+                if (pointsDisplay) {
+                    pointsDisplay.remove();
+                }
+            });
+            attempts = 0;
+        }
+
+        function checkAnswer(option) {
+            const correctAnswer = questions[currentQuestionIndex].answer;
+            const buttons = document.querySelectorAll('.option-button');
+            attempts++;
+            let points = 0;
+            if (option === correctAnswer) {
+                buttons.forEach(button => {
+                    if (button.textContent === option) {
+                        button.classList.add('correct');
+                        setTimeout(() => {
+                            button.classList.remove('correct');
+                            button.classList.add('correct-stationary');
+                        }, 5000); // Stop flashing after 5 seconds
+                    } else {
+                        button.disabled = true;
+                    }
+                });
+                if (attempts === 1) {
+                    points = 4;
+                } else if (attempts === 2) {
+                    points = 2;
+                } else if (attempts === 3) {
+                    points = 1;
+                }
+                score += points;
+                document.getElementById('score').textContent = score;
+                showPoints(buttons, option, points);
+            } else {
+                buttons.forEach(button => {
+                    if (button.textContent === option) {
+                        button.style.backgroundColor = 'darkgrey';
+                        button.disabled = true;
+                    }
+                });
+                if (attempts === 3) {
+                    buttons.forEach(button => {
+                        if (button.textContent !== correctAnswer) {
+                            button.disabled = true;
+                        }
+                    });
+                }
+            }
+        }
+
+        function showPoints(buttons, option, points) {
+            buttons.forEach(button => {
+                if (button.textContent === option) {
+                    const pointsDisplay = document.createElement('div');
+                    pointsDisplay.className = 'points';
+                    pointsDisplay.textContent = `+${points}`;
+                    button.appendChild(pointsDisplay);
+                    setTimeout(() => {
+                        pointsDisplay.remove();
+                    }, 5000); // Remove points display after 5 seconds
+                }
+            });
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+        // Initialize the first question
+        loadQuestion(currentQuestionIndex);
+    </script>
+</body>
+</html>
